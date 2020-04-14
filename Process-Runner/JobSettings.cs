@@ -17,6 +17,7 @@
     public class JobSettings
     {
         public string Args { get; set; }
+        public string CWD { get; set; }
         public Schedule Schedule { get; set; }
     }
 }

@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -18,14 +17,8 @@ namespace Process_Runner
         static void Main(string[] args)
         {
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
-
-            if (args.Length == 1 && int.TryParse(args[0], out var polling) && polling >= 3000)
-            {
-                PollingDuration = polling;
-                Process();
-            }
-            else
-                Console.WriteLine("Invalid Polling Duration");
+            PollingDuration = args.Length == 1 && int.TryParse(args[0], out var polling) && polling >= 3000 ? polling : 10000;
+            Process();
         }
 
         private static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
@@ -45,7 +38,7 @@ namespace Process_Runner
             {
                 GetProcesses().Select(m => new ProcessTasks(m)).ToList().ForEach(p =>
                 {
-                    if (processes.Find(m => m.PID == p.PID) == null)
+                    if (processes.Find(m => m.Name == p.Name) == null)
                         processes.Add(p);
                 });
 
@@ -58,29 +51,23 @@ namespace Process_Runner
                         Console.WriteLine();
                         Console.WriteLine(DateTime.Now.ToString());
                         Console.Write($"Process - {_p.Name}");
+
                         if (_p.IsDead && _p.ExecutionCounter == 0)
                         {
-                            var setting = GetProcessSettings(_p.StartInfo.FileName);
-                            if (setting != null)
+                            if (_p.Settings != null)
                             {
-                                _p.StartInfo.Arguments = setting.Args;
-                                switch (setting.Schedule.Type)
-                                {
-                                    case JobSchedule.Daily:
-
-                                        break;
-                                }
-                                _p.Start();
+                                // will work on the schedule part later
                             }
+                            _p.Start();
                             Console.WriteLine($" Started with PID {_p.PID}");
                         }
                         else
                         {
-                            Console.WriteLine($" Already Running with PID {_p.Id}");
+                            Console.WriteLine($" Already Running with PID {_p.PID}");
                         }
                     }
                     else
-                        processes.RemoveAll(m => m.PID == _p.PID);
+                        processes.RemoveAll(m => m.Name == _p.Name);
                 });
                 Thread.Sleep(PollingDuration);
             }
@@ -90,32 +77,16 @@ namespace Process_Runner
         {
             var directory = Path.Combine(Directory.GetCurrentDirectory(), "Jobs");
             Directory.CreateDirectory(directory);
-            var processes = Directory.GetFiles(directory, "*.exe", SearchOption.AllDirectories);
-            return processes.ToList().Select(m => new ProcessStartInfo
+            var processes = Directory.GetFiles(directory, "*.exe", SearchOption.AllDirectories).ToList();
+            processes.AddRange(Directory.GetFiles(directory, "*.lnk", SearchOption.AllDirectories));
+
+            return processes.Select(m => new ProcessStartInfo
             {
                 FileName = m,
-                Arguments = "",
-                WorkingDirectory = Path.GetDirectoryName(m),
                 UseShellExecute = true,
                 RedirectStandardOutput = false,
-                WindowStyle = ProcessWindowStyle.Hidden
+                WindowStyle = ProcessWindowStyle.Normal
             });
-        }
-
-        public static JobSettings GetProcessSettings(string path)
-        {
-            try
-            {
-                var dir = Path.GetDirectoryName(path);
-                var pname = Path.GetFileNameWithoutExtension(path);
-                var settingsFile = Path.Combine(dir, pname, ".json");
-
-                if (File.Exists(settingsFile))
-                    return JsonConvert.DeserializeObject<JobSettings>(File.ReadAllText(settingsFile));
-                else
-                    return null;
-            }
-            catch { return null; }
         }
     }
 }
