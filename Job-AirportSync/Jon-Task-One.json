@@ -1,0 +1,7 @@
+{
+  "args": "01 02 03 04 05",
+  "schedule": {
+    "type": "Daily",
+    "value" :  "16:05"
+  }
+}

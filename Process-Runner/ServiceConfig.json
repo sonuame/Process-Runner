@@ -1,0 +1,8 @@
+﻿{
+  "polling": 6000,
+  "services": [
+    {
+      "name": "airport-sync"
+    }
+  ]
+}

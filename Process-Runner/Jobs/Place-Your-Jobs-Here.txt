@@ -1,0 +1,5 @@
+﻿1) Each Job EXE should be in their own folders
+2) Job Folder file system
+		a) Main executable EXE (abc.exe)
+		b) Settings File (abc.json)
+		c) lnk file if refrenced to global applications like dotnet, nodejs, etc
