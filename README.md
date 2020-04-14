@@ -2,8 +2,8 @@
 This project is a process spawming tool where you can add any 3rd party EXE jobs that will run on their schedule times
 
 #Main Process Runner
-  use nssm or any service installation too install the host process runner as a service. check "service.cmd" file for installation details
-  Host process accepts the 1st argument as the polling duration of the service which cannot be less then 3000 millis
+  - use nssm or any service installation too install the host process runner as a service. check "service.cmd" file for installation details
+  - Host process accepts the 1st argument as the polling duration of the service which cannot be less then 3000 millis
   
 #
 ---
