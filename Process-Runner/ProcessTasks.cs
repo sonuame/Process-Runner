@@ -7,19 +7,9 @@ using System.IO;
 public class ProcessTasks : Process
 {
     public int ExecutionCounter { get; set; }
-    private JobSettings settings;
-    public JobSettings Settings => this.settings ?? GetProcessSettings(this.StartInfo.FileName);
-    public string Name
-    {
-        get
-        {
-            try
-            {
-                return "process-runner-" + base.ProcessName;
-            }
-            catch { return "process-runner-" + Path.GetFileNameWithoutExtension(base.StartInfo.FileName); }
-        }
-    }
+    private string settingsFile;
+    public JobSettings Settings;
+    public string Name => new DirectoryInfo(Path.GetDirectoryName(this.settingsFile)).Name;
     public int PID
     {
         get
@@ -45,31 +35,32 @@ public class ProcessTasks : Process
             }
         }
     }
-    public ProcessTasks(ProcessStartInfo pinfo)
+    public ProcessTasks(string settingsFile)
     {
-        base.StartInfo = pinfo;
-        if (this.Settings != null)
+        this.settingsFile = settingsFile;
+        this.Settings = JsonConvert.DeserializeObject<JobSettings>(File.ReadAllText(settingsFile));
+
+        base.StartInfo = new ProcessStartInfo
         {
-            var pdir = Path.GetDirectoryName(pinfo.FileName);
-
-            base.StartInfo.Arguments = this.Settings.Args;
-            base.StartInfo.WorkingDirectory = string.IsNullOrEmpty(this.Settings.CWD) ? pdir : this.Settings.CWD;
-            if (Path.GetExtension(pinfo.FileName).ToLower() == ".lnk")
-                base.StartInfo.WorkingDirectory = null;
-        }
-
-        //base.StartInfo.Arguments += " > " + Path.GetFileNameWithoutExtension(pinfo.FileName) + ".log";
+            FileName = this.Settings.Command,
+            Arguments = this.Settings.Args,
+            WorkingDirectory = string.IsNullOrEmpty(this.Settings.CWD) ? Path.GetDirectoryName(settingsFile) : this.Settings.CWD,
+            UseShellExecute = true,
+            RedirectStandardOutput = false,
+            WindowStyle = ProcessWindowStyle.Hidden
+        };
     }
 
-    public JobSettings GetProcessSettings(string path)
+    public JobSettings GetProcessSettings()
     {
+        var path = this.settingsFile;
         try
         {
             var dir = Path.GetDirectoryName(path);
             var pname = Path.GetFileNameWithoutExtension(path);
             var settingsFile = Path.Combine(dir, pname + ".json");
-            this.settings = JsonConvert.DeserializeObject<JobSettings>(File.ReadAllText(settingsFile));
-            return this.settings;
+            this.Settings = JsonConvert.DeserializeObject<JobSettings>(File.ReadAllText(settingsFile));
+            return this.Settings;
         }
         catch (Exception ex)
         {

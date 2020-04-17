@@ -1,8 +1,10 @@
 {
+  "command" :  "",
   "args": "01 02 03 04 05",
-  "cwd" :  "",
+  "cwd": "",
+  "user" :  "",
   "schedule": {
     "type": "Daily",
-    "value" :  "16:05"
+    "value": "16:05"
   }
 }

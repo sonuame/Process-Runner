@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -36,57 +35,52 @@ namespace Process_Runner
         {
             while (true)
             {
-                GetProcesses().Select(m => new ProcessTasks(m)).ToList().ForEach(p =>
+                processes.RemoveAll(m => m.IsDead);
+
+                GetProcesses().ForEach(p =>
                 {
-                    if (processes.Find(m => m.Name == p.Name) == null)
-                        processes.Add(p);
+                    var _p = processes.Find(m => m.Name == p.Name);
+                    if (_p == null) processes.Add(p);
                 });
 
                 Console.WriteLine($"Process Count - {processes.Count}");
-                Parallel.ForEach(processes, p =>
+                Parallel.ForEach<ProcessTasks>(processes, p =>
                 {
-                    var _p = (ProcessTasks)p;
-                    if (File.Exists(_p.StartInfo.FileName))
-                    {
-                        Console.WriteLine();
-                        Console.WriteLine(DateTime.Now.ToString());
-                        Console.Write($"Process - {_p.Name}");
 
-                        if (_p.IsDead && _p.ExecutionCounter == 0)
+                    if (p.IsDead && p.ExecutionCounter == 0)
+                    {
+                        if (p.Settings != null)
                         {
-                            if (_p.Settings != null)
-                            {
-                                // will work on the schedule part later
-                            }
-                            _p.Start();
-                            Console.WriteLine($" Started with PID {_p.PID}");
+                            // will work on the schedule part later
                         }
-                        else
-                        {
-                            Console.WriteLine($" Already Running with PID {_p.PID}");
-                        }
+                        p.Start();
+                        Console.WriteLine($"{DateTime.Now}\t{p.Name} Started with PID {p.PID}");
                     }
                     else
-                        processes.RemoveAll(m => m.Name == _p.Name);
+                    {
+                        Console.WriteLine($"{DateTime.Now}\t{p.Name} Already Running with PID {p.PID}");
+                    }
                 });
                 Thread.Sleep(PollingDuration);
             }
         }
 
-        public static IEnumerable<ProcessStartInfo> GetProcesses()
+        public static List<ProcessTasks> GetProcesses()
         {
             var directory = Path.Combine(Directory.GetCurrentDirectory(), "Jobs");
             Directory.CreateDirectory(directory);
-            var processes = Directory.GetFiles(directory, "*.exe", SearchOption.AllDirectories).ToList();
-            processes.AddRange(Directory.GetFiles(directory, "*.lnk", SearchOption.AllDirectories));
+            var _processes = new List<ProcessTasks>();
 
-            return processes.Select(m => new ProcessStartInfo
+            Directory
+                .EnumerateDirectories(directory, "*.*", SearchOption.TopDirectoryOnly)
+                .ToList()
+                .ForEach(dir =>
             {
-                FileName = m,
-                UseShellExecute = true,
-                RedirectStandardOutput = false,
-                WindowStyle = ProcessWindowStyle.Normal
+                var proc = Path.Combine(dir, (new DirectoryInfo(dir)).Name + ".json");
+                _processes.Add(new ProcessTasks(proc));
             });
+
+            return _processes;
         }
     }
 }

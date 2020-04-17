@@ -2,6 +2,7 @@
 {
     public enum JobSchedule
     {
+        Polling,
         Daily,
         Weekly,
         Monthly,
@@ -16,6 +17,8 @@
 
     public class JobSettings
     {
+        public string Command { get; set; }
+        public string User { get; set; }
         public string Args { get; set; }
         public string CWD { get; set; }
         public Schedule Schedule { get; set; }
