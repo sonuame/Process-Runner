@@ -1,4 +1,6 @@
-﻿namespace Process_Runner
+﻿using Newtonsoft.Json;
+
+namespace Process_Runner
 {
     public enum JobSchedule
     {
@@ -19,10 +21,12 @@
     {
         public string Command { get; set; }
         public string User { get; set; }
+        public string Domain { get; set; }
         public string Args { get; set; }
         public string CWD { get; set; }
         public string StdErr { get; set; }
         public string StdOut { get; set; }
+        [JsonProperty("pre-commands")] public string[] PreCommands { get; set; }
         public Schedule Schedule { get; set; }
     }
 }

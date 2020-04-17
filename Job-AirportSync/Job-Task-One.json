@@ -1,8 +1,12 @@
 {
-  "command" :  "",
+  "command": "",
   "args": "01 02 03 04 05",
   "cwd": "",
-  "user" :  "",
+  "user": "",
+  "domain": "",
+  "pre-commands": [
+
+  ],
   "schedule": {
     "type": "Daily",
     "value": "16:05"

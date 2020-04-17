@@ -49,6 +49,8 @@ public class ProcessTasks : Process
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             WindowStyle = ProcessWindowStyle.Hidden,
+            UserName = this.Settings.User,
+            Domain = this.Settings.User.Contains("@") ? null : this.Settings.Domain
         };
 
         if (Path.GetDirectoryName(base.StartInfo.FileName) == "")
@@ -76,17 +78,17 @@ public class ProcessTasks : Process
     private void ProcessTasks_ErrorDataReceived(object sender, DataReceivedEventArgs e)
     {
         if (e.Data != null)
-            File.AppendAllLines(this.Settings.StdErr, new string[] { e.Data });
-        Console.WriteLine($"Process \"{this.Name}\" Error");
-        Console.WriteLine(e.Data);
+        {
+            Utils.LogToPath(this.Settings.StdErr, e.Data);
+            Console.WriteLine($"Process \"{this.Name}\" Error");
+            Console.WriteLine(e.Data);
+        }
     }
 
     private void ProcessTasks_OutputDataReceived(object sender, DataReceivedEventArgs e)
     {
         if (e.Data != null)
-            File.AppendAllLines(this.Settings.StdOut, new string[] { e.Data });
-        //Console.WriteLine($"Process \"{this.Name}\" Output");
-        //Console.WriteLine(e.Data);
+            Utils.LogToPath(this.Settings.StdOut, e.Data);
     }
 
     public JobSettings GetProcessSettings()

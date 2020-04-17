@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,11 +14,21 @@ namespace Process_Runner
         static int PollingDuration;
 
         static List<ProcessTasks> processes = new List<ProcessTasks>();
-
+        static OSPlatform OSType = OSPlatform.Windows;
+        static Dictionary<OSPlatform, string> cmd_shell = new Dictionary<OSPlatform, string>
+        {
+            {OSPlatform.Windows, "cmd.exe /c" },
+            {OSPlatform.Linux, "bash -c" },
+            {OSPlatform.OSX, "bash -c" },
+            {OSPlatform.FreeBSD, "bash -c" },
+        };
         static void Main(string[] args)
         {
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
             PollingDuration = args.Length == 1 && int.TryParse(args[0], out var polling) && polling >= 3000 ? polling : 10000;
+            OSType = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? OSPlatform.Linux : OSType;
+            OSType = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? OSPlatform.OSX : OSType;
+            OSType = RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD) ? OSPlatform.FreeBSD : OSType;
             Process();
         }
 
@@ -50,9 +62,22 @@ namespace Process_Runner
                     {
                         if (p.IsDead && p.ExecutionCounter == 0)
                         {
-                            if (p.Settings != null)
+                            if (p.Settings.PreCommands != null)
                             {
-                                // will work on the schedule part later
+                                p.Settings.PreCommands.ToList().ForEach(command =>
+                                {
+
+                                    var __p = new Process()
+                                    {
+                                        StartInfo = new ProcessStartInfo
+                                        {
+                                            FileName = cmd_shell[OSType].Split(' ')[0],
+                                            Arguments = cmd_shell[OSType].Split(' ')[1] + " \"" + command + "\""
+                                        }
+                                    };
+                                    __p.Start();
+                                    __p.WaitForExit();
+                                });
                             }
                             p.Start();
                             p.BeginOutputReadLine();
