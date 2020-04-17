@@ -45,10 +45,48 @@ public class ProcessTasks : Process
             FileName = this.Settings.Command,
             Arguments = this.Settings.Args,
             WorkingDirectory = string.IsNullOrEmpty(this.Settings.CWD) ? Path.GetDirectoryName(settingsFile) : this.Settings.CWD,
-            UseShellExecute = true,
-            RedirectStandardOutput = false,
-            WindowStyle = ProcessWindowStyle.Hidden
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            WindowStyle = ProcessWindowStyle.Hidden,
         };
+
+        if (Path.GetDirectoryName(base.StartInfo.FileName) == "")
+            base.StartInfo.FileName = Path.Combine(base.StartInfo.WorkingDirectory, base.StartInfo.FileName);
+
+        if (string.IsNullOrEmpty(this.Settings.StdOut))
+            this.Settings.StdOut = Path.Combine(base.StartInfo.WorkingDirectory, this.Name + ".log");
+
+        if (!string.IsNullOrEmpty(this.Settings.StdOut) && Path.GetDirectoryName(this.Settings.StdOut) == "")
+            this.Settings.StdOut = Path.Combine(base.StartInfo.WorkingDirectory, this.Settings.StdOut + ".log");
+
+
+        if (string.IsNullOrEmpty(this.Settings.StdErr))
+            this.Settings.StdErr = Path.Combine(base.StartInfo.WorkingDirectory, this.Name + ".log");
+
+        if (!string.IsNullOrEmpty(this.Settings.StdErr) && Path.GetDirectoryName(this.Settings.StdErr) == "")
+            this.Settings.StdErr = Path.Combine(base.StartInfo.WorkingDirectory, this.Settings.StdErr + ".log");
+
+
+        base.OutputDataReceived += ProcessTasks_OutputDataReceived;
+        base.ErrorDataReceived += ProcessTasks_ErrorDataReceived;
+
+    }
+
+    private void ProcessTasks_ErrorDataReceived(object sender, DataReceivedEventArgs e)
+    {
+        if (e.Data != null)
+            File.AppendAllLines(this.Settings.StdErr, new string[] { e.Data });
+        Console.WriteLine($"Process \"{this.Name}\" Error");
+        Console.WriteLine(e.Data);
+    }
+
+    private void ProcessTasks_OutputDataReceived(object sender, DataReceivedEventArgs e)
+    {
+        if (e.Data != null)
+            File.AppendAllLines(this.Settings.StdOut, new string[] { e.Data });
+        //Console.WriteLine($"Process \"{this.Name}\" Output");
+        //Console.WriteLine(e.Data);
     }
 
     public JobSettings GetProcessSettings()

@@ -21,6 +21,8 @@
         public string User { get; set; }
         public string Args { get; set; }
         public string CWD { get; set; }
+        public string StdErr { get; set; }
+        public string StdOut { get; set; }
         public Schedule Schedule { get; set; }
     }
 }

@@ -46,20 +46,25 @@ namespace Process_Runner
                 Console.WriteLine($"Process Count - {processes.Count}");
                 Parallel.ForEach<ProcessTasks>(processes, p =>
                 {
-
-                    if (p.IsDead && p.ExecutionCounter == 0)
+                    Task.Run(() =>
                     {
-                        if (p.Settings != null)
+                        if (p.IsDead && p.ExecutionCounter == 0)
                         {
-                            // will work on the schedule part later
+                            if (p.Settings != null)
+                            {
+                                // will work on the schedule part later
+                            }
+                            p.Start();
+                            p.BeginOutputReadLine();
+                            p.BeginErrorReadLine();
+                            Console.WriteLine($"{DateTime.Now}\t{p.Name} Started with PID {p.PID}");
                         }
-                        p.Start();
-                        Console.WriteLine($"{DateTime.Now}\t{p.Name} Started with PID {p.PID}");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"{DateTime.Now}\t{p.Name} Already Running with PID {p.PID}");
-                    }
+                        else
+                        {
+                            Console.WriteLine($"{DateTime.Now}\t{p.Name} Already Running with PID {p.PID}");
+                        }
+                    });
+
                 });
                 Thread.Sleep(PollingDuration);
             }
