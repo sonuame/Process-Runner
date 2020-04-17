@@ -9,26 +9,27 @@ This project is a process spawming tool where you can add any 3rd party EXE jobs
 ---
 #Adding Jobs
  Root folder of the process-runner has a folder "Jobs"
- 1) Each Job EXE should be in their own folders
+ 1) Each Job should be in their own folders
  2) Job Folder file system
-	* Main executable EXE (abc.exe)
-	* Settings File (abc.json)
-	* ".lnk" file if refrenced to global applications like dotnet, nodejs, etc
- 3) Folder name should be same as that of EXE/LNK inside it
+	* Settings File (job.json)
+	* Other executables if any (EXE, sh etc)
+ 3) Settings file name should be same as that of parent folder
  
  
 #Job Settings
   Job settings file (abc.json) contains 2 elements
-  1) "args" - Specify the argumers to your job process space separated
+  1) "command" - Main executable process without args
+  1) "args" - Specify the argumets to your command with space separated
   2) "schedule" - Provide the execution schedule. contains 2 property as
       * "type" - can be "Daily, Weekly, Monthly, Yearly"
       * "value" - the schedule timestamp as 
+      	  - Polling - "2"  (Executing the process after every "2" hours.
           - Daily - "16:05"
           - Weekly - "Friday 16:05"
           - Monthly - "02 16:05" (02 is the date)
           - Yearly - "01-02 16:05" (01 is month, 02 is date)
           
-          
+
 ### Sample Job is the part of the project  
 ---
 # ** Scheduling part is still in development. 
